@@ -1,4 +1,3 @@
-import { Route } from "./Route.js";
 import { errorHandlers } from "./errorHandlers.js";
 
 export class Router {
