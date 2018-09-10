@@ -2,17 +2,17 @@ import { handlers } from "./handlers";
 
 export const routes = [
 	{
+		secure: false,
 		method: 'get',
 		path: 'ping',
 		handler: handlers.ping,
-		secure: false,
 		writer: null,
 	},
 	{
+		secure: true,
 		method: 'get',
 		path: 'ping',
 		handler: handlers.ping,
-		secure: true,
 		writer: null,
 	},
 ];
