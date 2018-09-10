@@ -1,18 +1,22 @@
 
-let environments = {};
+const environments = {};
 
 environments.staging = {
 	httpPort: 3000,
 	httpsPort: 3001,
+	x509key: './https/key.pem',
+	x509cert: './https/cert.pem',
 	envName: 'staging'
 };
 
 environments.production = {
 	httpPort: 5000,
 	httpsPort: 5001,
+	x509key: './https/key.pem',
+	x509cert: './https/cert.pem',
 	envName: 'production'
 };
 
-var currentEnvironment = process.env.NODE_ENV === 'production' ? process.env.NODE_ENV : 'staging';
+const currentMode = process.env.NODE_ENV;
 
-module.exports = environments[currentEnvironment] || environments.staging;
+module.exports = environments[currentMode] || environments.staging;

@@ -1,81 +1,26 @@
-const http = require('http');
-const https = require('https');
-const url = require('url');
-const fs = require('fs');
-const StringDecoder = require('string_decoder').StringDecoder;
-const config = require('./config');
+import { createServer } from 'http';
+import { createServer as createSecureServer } from 'https';
+import { readFileSync } from 'fs';
 
-const decoder = new StringDecoder('utf-8');
+import { UnifiedServer } from './UnifiedServer';
+import { Router } from "./Router";
 
-const handlers = {
-	sample: (data, callback) => callback(406, {name: 'sampleHandler', ...data}),
-	notFound: (data, callback) => callback(404),
-	ping: (data, callback) => callback(200, {msg:'pong'}),
+import { x509key, x509cert, httpPort, envName, httpsPort } from './config';
+
+import { routes } from "./routes";
+
+const router = new Router();
+const server = new UnifiedServer(router);
+
+const httpsServerOptions = {
+	key: readFileSync(x509key),
+	cert: readFileSync(x509cert)
 };
 
-const router = {
-	'sample': handlers.sample,
-	'ping': handlers.ping,
-	'404': handlers.notFound
-};
+const httpsServer = createSecureServer(httpsServerOptions, (request, response) => server.serve(true, request, response));
+const httpServer = createServer((request, response) => server.serve(false, request, response));
 
-function responseDataGenerator(req) {
-	let headers = req.headers;
-	let method = req.method.toLowerCase()+'';
-	let parsedUrl = url.parse(req.url, true);
-	let path = parsedUrl.pathname;
-	let trimmedPath = path.replace(/(?:^\/+)|(?:\/+$)/, '');
-	let query = parsedUrl.query;
-	let payload = buffer + decoder.end();
+routes.forEach(r => router[r.method](r.secure, new Route(r.secure, r.path, r.handler, r.writer)));
 
-	return {trimmedPath, method, headers, query, payload};
-}
-
-function responseHandlerBroker(path) {
-	return router[path] || router[404];
-}
-
-function jsonResponseWriterGenerator(res) {
-	return (statusCode, payload) => {
-		statusCode = statusCode || 200;
-		payload = payload || {};
-		let payloadString = JSON.stringify(payload);
-		res.setHeader('Content-Type', 'application/json');
-		res.writeHead(statusCode);
-		res.end(payloadString);
-		console.log('payload=',buffer);
-	};
-}
-
-var unifiedServer = function (req, res) {
-	let buffer = '';
-	req.on('data', chunk => buffer += decoder.write(chunk));
-	req.on('end', () => {
-		let responseData = responseDataGenerator(req);
-		let responseHandler = responseHandlerBroker(responseData.trimmedPath);
-		let responseWriter = jsonResponseWriterGenerator(res);
-		responseHandler(responseData, responseWriter);
-	});
-	console.log(headers);
-};
-
-var httpServer = http.createServer((req, res) => {
-	unifiedServer(req, res);
-});
-
-var httpsServerOptions = {
-	key: fs.readFileSync('./https/key.pem'),
-	cert: fs.readFileSync('./https/cert.pem')
-};
-
-var httpsServer = https.createServer(httpsServerOptions, (req, res) => {
-	unifiedServer(req, res);
-});
-
-httpServer.listen(config.httpPort, () => {
-	console.log(`Listening on port ${config.httpPort} in ${config.envName} mode`);
-});
-
-httpsServer.listen(config.httpsPort, () => {
-	console.log(`Listening securely on port ${config.httpsPort} in ${config.envName} mode`);
-});
+httpsServer.listen(httpsPort, () => console.log(`Listening securely on '${envName}' port ${httpPort}`));
+httpServer.listen(httpPort, () => console.log(`Listening on '${envName}' port ${httpPort}`));
