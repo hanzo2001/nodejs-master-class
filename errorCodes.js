@@ -1,0 +1,8 @@
+
+exports.UNKNOWN_HANDLER = 10;
+exports.BAD_PATH_VARNUM = 14;
+exports.BAD_PATH_VARTYPE = 15;
+exports.HTTP_NOT_FOUND = 404;
+exports.HTTP_FORBIDDEN = 403;
+exports.HTTP_BAD_REQUEST = 400;
+exports.HTTP_INTERNAL_ERROR = 500;

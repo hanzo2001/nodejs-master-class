@@ -1,26 +1,27 @@
-import { createServer } from 'http';
-import { createServer as createSecureServer } from 'https';
-import { readFileSync } from 'fs';
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
 
-import { UnifiedServer } from './UnifiedServer';
-import { Router } from "./Router";
+const { UnifiedServer } = require('./UnifiedServer');
+const { Router } = require("./Router");
+const { Route } = require("./Route");
 
-import { x509key, x509cert, httpPort, envName, httpsPort } from './config';
+const { x509key, x509cert, httpPort, envName, httpsPort } = require('./config');
 
-import { routes } from "./routes";
+const { routes } = require("./routes");
 
 const router = new Router();
 const server = new UnifiedServer(router);
 
 const httpsServerOptions = {
-	key: readFileSync(x509key),
-	cert: readFileSync(x509cert)
+	key: fs.readFileSync(x509key),
+	cert: fs.readFileSync(x509cert)
 };
 
-const httpsServer = createSecureServer(httpsServerOptions, (request, response) => server.serve(true, request, response));
-const httpServer = createServer((request, response) => server.serve(false, request, response));
+const httpsServer = https.createServer(httpsServerOptions, (request, response) => server.serve(true, request, response));
+const httpServer = http.createServer((request, response) => server.serve(false, request, response));
 
-routes.forEach(r => router[r.method](r.secure, new Route(r.secure, r.path, r.handler, r.writer)));
+routes.forEach(r => router[r.method](new Route(r.secure, r.path, r.handler, r.writer)));
 
-httpsServer.listen(httpsPort, () => console.log(`Listening securely on '${envName}' port ${httpPort}`));
+httpsServer.listen(httpsPort, () => console.log(`Listening securely on '${envName}' port ${httpsPort}`));
 httpServer.listen(httpPort, () => console.log(`Listening on '${envName}' port ${httpPort}`));

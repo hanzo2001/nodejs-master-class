@@ -1,41 +1,50 @@
-import { parse } from 'url';
-import { StringDecoder } from 'string_decoder';
-import { errorHandlers } from "./errorHandlers";
+const url = require("url");
+const { StringDecoder } = require("string_decoder");
 
-const defaultUtf8decoder = new StringDecoder('utf-8');
+const { DefaultRouter } = require("./DefaultRouter");
 
-const defaultRouter = {
-	resolve: (method, path, request) => errorHandlers[404]
-};
+const defaultUtf8decoder = new StringDecoder("utf8");
 
-export class UnifiedServer {
+
+class UnifiedServer {
 	constructor(
 		router,
 		decoder,
 	) {
-		this.router = router || defaultRouter;
+		this.router = router || DefaultRouter;
 		this.decoder = decoder || defaultUtf8decoder;
 	}
 	
 	serve(https, userRequest, serverResponse) {
-		let buffer = '';
-		userRequest.on('data', chunk => buffer += this.decoder.write(chunk));
-		userRequest.on('end', () => {
-			const userRequestData = requestDataGenerator(https, userRequest, buffer);
+		let buffer = "";
+		userRequest.on("data", chunk => buffer += this.decoder.write(chunk));
+		userRequest.on("end", () => {
+			const userRequestData = this.requestDataGenerator(https, userRequest, buffer);
 			const {method, path} = userRequestData;
-			const responseHandler = this.router.resolve(method, path, userRequestData);
-			responseHandler(userRequestData, serverResponse);
+			console.log(`${https?'Secured':'Normal'} ${method.toUpperCase()} ${path}`);
+			let responseHandler;
+			try {
+				responseHandler = this.router.resolve(path, userRequestData);
+			} catch (routingError) {
+				responseHandler = this.router.resolveError(routingError, path, userRequest);
+			}
+			try {
+				responseHandler(userRequestData, serverResponse);
+			} catch (runtimeError) {
+				responseHandler = this.router.resolveError(runtimeError, path, userRequest);
+				responseHandler(null, serverResponse);
+			}
 		});
+	}
+	requestDataGenerator(isSecure, userRequest, buffer) {
+		let headers = userRequest.headers;
+		let method = userRequest.method.toLowerCase()+"";
+		let parsedUrl = url.parse(userRequest.url, true);
+		let path = parsedUrl.pathname;
+		let query = parsedUrl.query;
+		let payload = buffer + this.decoder.end();
+		return {isSecure, path, method, headers, query, payload};
 	}
 }
 
-function requestDataGenerator(isSecure, userRequest, buffer) {
-	let headers = userRequest.headers;
-	let method = userRequest.method.toLowerCase()+'';
-	let parsedUrl = parse(userRequest.url, true);
-	let path = parsedUrl.pathname;
-	let query = parsedUrl.query;
-	let payload = buffer + this.decoder.end();
-
-	return {isSecure, path, method, headers, query, payload};
-}
+exports.UnifiedServer = UnifiedServer;
