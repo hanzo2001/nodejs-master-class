@@ -3,7 +3,7 @@ function rawResponseWriter(serverResponse) {
 	return (statusCode, payload) => {
 		serverResponse.setHeader('Content-Type', 'text/plain');
 		serverResponse.writeHead(statusCode||200);
-		serverResponse.end(payload||'');
+		serverResponse.end(payload+""||"");
 	}
 }
 
