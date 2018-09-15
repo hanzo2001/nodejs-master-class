@@ -1,8 +1,11 @@
 const { errorHandlers } = require("./errorHandlers.js");
-const { rawResponseWriter, emptyResponseWriter } = require("./responseWriters");
+const { jsonResponseWriter, emptyResponseWriter } = require("./responseWriters");
 
 const { UNKNOWN_HANDLER, HTTP_BAD_REQUEST, HTTP_FORBIDDEN, HTTP_NOT_FOUND, HTTP_INTERNAL_ERROR, BAD_PATH_VARTYPE, BAD_PATH_VARNUM } = require("./errorCodes");
 
+/**
+ * Route registry and request to response broker
+ */
 class Router {
 	constructor() {
 		this.defaultErrorHandler = errorHandlers[500];
@@ -22,6 +25,10 @@ class Router {
 			head: [],
 		};
 	}
+	/**
+	 * Register a route on every method
+	 * @param {Route} route route to register
+	 */
 	all(route) {
 		this.get(route);
 		this.put(route);
@@ -34,6 +41,11 @@ class Router {
 	post(route)   { this.addRoute(route, "post"); }
 	delete(route) { this.addRoute(route, "delete"); }
 	head(route)   { this.addRoute(route, "head"); }
+	/**
+	 * Lower level registry
+	 * @param {Route} route route to register
+	 * @param {string} method method string
+	 */
 	addRoute(route, method) {
 		const requiresEncryption = route.requiresEncryption;
 		if (requiresEncryption === null) {
@@ -43,9 +55,11 @@ class Router {
 			(requiresEncryption ? this.secureRoutes : this.routes)[method].push(route);
 		}
 	}
-	setErrorHandler(code, handler) {
-		this.errorHandlers[code] = handler;
-	}
+	/**
+	 * Return a response handler from a request
+	 * @param {string} path request path
+	 * @param {object} request all the request data
+	 */
 	resolve(path, request) {
 		let {method, isSecure} = request;
 		let route = isSecure
@@ -63,19 +77,22 @@ class Router {
 		}
 		return handler;
 	}
+	/**
+	 * Broker a response handler in case of errors
+	 * @param {number|object} error error code or object with code and message
+	 * @param {string} path request path
+	 * @param {object} request all the request data
+	 */
 	resolveError(error, path, request) {
 		let {method} = request;
-		let writer = serverResponse => rawResponseWriter(serverResponse);
+		let writer = serverResponse => jsonResponseWriter(serverResponse);
 		let code = 500;
 		if (error && error.code) {
 			code = error.code;
 		} else if (typeof error === "number") {
 			code = error;
 		}
-		let msg = "";
-		if (error && error.msg) {
-			msg = error.msg;
-		}
+		let msg = error && error.msg ? "" : error.msg;
 		switch (code) {
 			case UNKNOWN_HANDLER:
 				msg = msg || `Unknown handler for request for path: ${method} ${path}`;
@@ -104,17 +121,27 @@ class Router {
 				break;
 		}
 		console.log(msg);
-		let data = this.cleanupBadErrorData({ code, msg }, path);
+		let data = this._cleanupBadErrorData({ code, msg }, path);
 		let handler = errorHandlers[code] || errorHandlers.default;
 		return (_, serverResponse) => handler(data, writer(serverResponse));
 	}
+	/**
+	 * Get a secure route from a determined path on a specific method
+	 * @param {string} method request method
+	 * @param {string} path request path
+	 */
 	getSecureRoute(method, path) {
 		return this.secureRoutes[method].find(route => route.matches(path));
 	}
+	/**
+	 * Get a normal route from a determined path on a specific method
+	 * @param {string} method request method
+	 * @param {string} path request path
+	 */
 	getRoute(method, path) {
 		return this.routes[method].find(route => route.matches(path));
 	}
-	cleanupBadErrorData(data, path) {
+	_cleanupBadErrorData(data, path) {
 		const contactDevs = "Contact developers";
 		if (!data) {
 			console.log('Unhandled error for request for path', path);
