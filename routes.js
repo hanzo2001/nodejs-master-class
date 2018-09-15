@@ -28,6 +28,6 @@ exports.routes = [
 		method: "get",
 		path: "/hello/{name}",
 		handler: hello,
-		writer: rawResponseWriter,
+		writer: null,
 	},
 ];
