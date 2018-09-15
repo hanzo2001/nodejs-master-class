@@ -1,5 +1,5 @@
 const { echo, hello, ping } = require("./handlers");
-const { rawResponseWriter } = require("./responseWriters");
+const { rawResponseWriter } = require("./server/responseWriters");
 
 exports.routes = [
 	{

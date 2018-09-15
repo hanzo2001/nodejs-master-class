@@ -2,11 +2,11 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 
-const { UnifiedServer } = require('./UnifiedServer');
-const { Router } = require("./Router");
-const { Route } = require("./Route");
+const { UnifiedServer } = require("./server/UnifiedServer");
+const { Router } = require("./server/Router");
+const { Route } = require("./server/Route");
 
-const { x509key, x509cert, httpPort, envName, httpsPort } = require('./config');
+const { x509key, x509cert, httpPort, envName, httpsPort } = require("./config");
 
 const { routes } = require("./routes");
 
