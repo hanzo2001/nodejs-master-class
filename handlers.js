@@ -9,9 +9,10 @@ function pingController(data, callback) {
 }
 
 function helloController(data, callback) {
-	const name = data.pathData.name;
-	const msg = `Nice to meet you, ${name}`;
-	callback(200, msg);
+	const pathData = data.pathData;
+	const name = pathData && pathData.name ? pathData.name : null;
+	const msg = name ? `Nice to meet you, ${name}` : "Hello there";
+	callback(200, {msg});
 }
 
 exports.echo = echoController;
