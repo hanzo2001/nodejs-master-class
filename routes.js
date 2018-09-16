@@ -1,4 +1,4 @@
-const { echo, hello, ping } = require("./handlers");
+const { echo, hello, ping, users } = require("./handlers");
 const { rawResponseWriter } = require("./server/responseWriters");
 
 exports.routes = [
@@ -28,6 +28,34 @@ exports.routes = [
 		method: "get",
 		path: "/hello/{name}",
 		handler: hello,
+		writer: null,
+	},
+	{
+		secure: true,
+		method: "post",
+		path: "/users",
+		handler: users,
+		writer: null,
+	},
+	{
+		secure: true,
+		method: "get",
+		path: "/users/{userPhone}",
+		handler: users,
+		writer: null,
+	},
+	{
+		secure: true,
+		method: "put",
+		path: "/users/{userPhone}",
+		handler: users,
+		writer: null,
+	},
+	{
+		secure: true,
+		method: "delete",
+		path: "/users/{userPhone}",
+		handler: users,
 		writer: null,
 	},
 ];

@@ -1,20 +1,23 @@
+const { bootstrapUsersController } = require("./bootstrap");
 
-function echoController(data, callback) {
-	callback(406, data);
+function echoController(requestData, callback) {
+	callback(406, requestData);
 }
 
-function pingController(data, callback) {
-	data = 'pong';
+function pingController(requestData, callback) {
+	const data = 'pong';
 	callback(200, data);
 }
 
-function helloController(data, callback) {
-	const pathData = data.pathData;
+function helloController(requestData, callback) {
+	const pathData = requestData.pathData;
 	const name = pathData && pathData.name ? pathData.name : null;
 	const msg = name ? `Nice to meet you, ${name}` : "Hello there";
-	callback(200, {msg});
+	const data = { msg };
+	callback(200, data);
 }
 
 exports.echo = echoController;
 exports.ping = pingController;
 exports.hello = helloController;
+exports.users = bootstrapUsersController();
