@@ -92,7 +92,7 @@ class Router {
 		} else if (typeof error === "number") {
 			code = error;
 		}
-		let msg = error && error.msg ? "" : error.msg;
+		let msg = error && error.msg ? error.msg : "";
 		switch (code) {
 			case UNKNOWN_HANDLER:
 				msg = msg || `Unknown handler for request for path: ${method} ${path}`;
