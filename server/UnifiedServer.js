@@ -57,6 +57,12 @@ class UnifiedServer {
 		let path = parsedUrl.pathname;
 		let query = parsedUrl.query;
 		let payload = buffer + this.decoder.end();
+		try {
+			payload = payload ? JSON.parse(payload) : null;
+		} catch (error) {
+			payload = null;
+			console.log(`Bad json payload:`, buffer);
+		}
 		return {isSecure, path, method, headers, query, payload};
 	}
 }
