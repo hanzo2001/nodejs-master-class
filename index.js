@@ -29,7 +29,10 @@ const httpsServer = https.createServer(httpsServerOptions, (request, response) =
 const httpServer = http.createServer((request, response) => server.serve(false, request, response));
 
 // add all the routes to the router
-routes.forEach(r => router[r.method](new Route(r.secure, r.path, r.handler, r.writer)));
+routes.forEach(r => r.route
+	? router[r.method](r.route)
+	: router[r.method](new Route(r.secure, r.path, r.handler, r.writer))
+);
 
 // start the real application
 httpsServer.listen(httpsPort, () => console.log(`Listening securely on '${envName}' port ${httpsPort}`));
