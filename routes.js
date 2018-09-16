@@ -1,6 +1,8 @@
 const { echo, hello, ping, users } = require("./handlers");
 const { rawResponseWriter } = require("./server/responseWriters");
 
+const { Route } = require("./server/Route");
+
 exports.routes = [
 	{
 		secure: null,
@@ -30,32 +32,8 @@ exports.routes = [
 		handler: hello,
 		writer: null,
 	},
-	{
-		secure: true,
-		method: "post",
-		path: "/users",
-		handler: users,
-		writer: null,
-	},
-	{
-		secure: true,
-		method: "get",
-		path: "/users/{userPhone}",
-		handler: users,
-		writer: null,
-	},
-	{
-		secure: true,
-		method: "put",
-		path: "/users/{userPhone}",
-		handler: users,
-		writer: null,
-	},
-	{
-		secure: true,
-		method: "delete",
-		path: "/users/{userPhone}",
-		handler: users,
-		writer: null,
-	},
+	{ method: "post",   route: new Route(true, "/users", users, null), },
+	{ method: "get",    route: new Route(true, "/users/{userPhone}", users, null), },
+	{ method: "put",    route: new Route(true, "/users/{userPhone}", users, null), },
+	{ method: "delete", route: new Route(true, "/users/{userPhone}", users, null), },
 ];
